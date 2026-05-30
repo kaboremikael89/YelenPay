@@ -1,0 +1,13 @@
+# Configuration Netlify pour YelenPay (Next.js)
+# Sans variables d'environnement Supabase, l'app démarre en MODE DÉMO
+# (données d'exemple, paiements simulés) — parfait pour une version vitrine.
+
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Runtime officiel Next.js de Netlify (fourni automatiquement).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

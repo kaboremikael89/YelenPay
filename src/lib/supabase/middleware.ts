@@ -1,8 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { DEMO } from "@/lib/demo";
 
 /** Rafraîchit la session Supabase et protège les routes privées. */
 export async function updateSession(request: NextRequest) {
+  // En mode démo, aucune authentification : tout est accessible.
+  if (DEMO) return NextResponse.next({ request });
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

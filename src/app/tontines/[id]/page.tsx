@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { formatCFA, FREQUENCY_LABELS } from "@/lib/utils";
 import { buildRoundState, beneficiaryForRound, potAmount } from "@/lib/tontine";
 import { payContribution, advanceRound } from "@/app/tontines/actions";
+import {
+  DEMO,
+  demoUser,
+  getDemoTontine,
+  getDemoMembers,
+  getDemoContributions,
+} from "@/lib/demo";
+import { DemoBanner } from "@/components/DemoBanner";
 import type { Contribution, Tontine, TontineMember } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -22,32 +30,49 @@ export default async function TontineDetailPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: tontine } = await supabase
-    .from("tontines")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (!tontine) notFound();
-  const t = tontine as Tontine;
+  let user: { id?: string } | null = demoUser;
+  let t: Tontine;
+  let members: TontineMember[];
+  let contributions: Contribution[];
 
-  const { data: membersData } = await supabase
-    .from("tontine_members")
-    .select("*")
-    .eq("tontine_id", id)
-    .order("position");
-  const members = (membersData ?? []) as TontineMember[];
+  if (DEMO) {
+    const demoT = getDemoTontine(id);
+    if (!demoT) notFound();
+    t = demoT;
+    members = getDemoMembers(id);
+    contributions = getDemoContributions(id).filter(
+      (c) => c.round === t.current_round,
+    );
+  } else {
+    const supabase = await createClient();
+    const {
+      data: { user: u },
+    } = await supabase.auth.getUser();
+    user = u;
 
-  const { data: contribData } = await supabase
-    .from("contributions")
-    .select("*")
-    .eq("tontine_id", id)
-    .eq("round", t.current_round);
-  const contributions = (contribData ?? []) as Contribution[];
+    const { data: tontine } = await supabase
+      .from("tontines")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (!tontine) notFound();
+    t = tontine as Tontine;
+
+    const { data: membersData } = await supabase
+      .from("tontine_members")
+      .select("*")
+      .eq("tontine_id", id)
+      .order("position");
+    members = (membersData ?? []) as TontineMember[];
+
+    const { data: contribData } = await supabase
+      .from("contributions")
+      .select("*")
+      .eq("tontine_id", id)
+      .eq("round", t.current_round);
+    contributions = (contribData ?? []) as Contribution[];
+  }
 
   const roundState = buildRoundState(members, contributions, t.current_round);
   const beneficiary = beneficiaryForRound(members, t.current_round);
@@ -59,6 +84,7 @@ export default async function TontineDetailPage({
   return (
     <div className="min-h-screen pb-24">
       <AppHeader title={t.name} backHref="/dashboard" />
+      <DemoBanner />
 
       <div className="space-y-4 p-4">
         {sp.paid && (
@@ -112,6 +138,7 @@ export default async function TontineDetailPage({
                       name="contribution_id"
                       value={myState.contribution.id}
                     />
+                    <input type="hidden" name="tontine_id" value={t.id} />
                     <Button type="submit" variant="accent" size="sm">
                       Payer {formatCFA(myState.contribution.amount)}
                     </Button>

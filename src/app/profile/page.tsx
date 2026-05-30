@@ -3,21 +3,31 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
+import { DemoBanner } from "@/components/DemoBanner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DEMO, demoUser, demoProfile } from "@/lib/demo";
+import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user?.id ?? "")
-    .single();
+  let user: { email?: string } | null = demoUser;
+  let profile: Profile | null = demoProfile;
+
+  if (!DEMO) {
+    const supabase = await createClient();
+    const {
+      data: { user: u },
+    } = await supabase.auth.getUser();
+    user = u;
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", u?.id ?? "")
+      .single();
+    profile = data as Profile | null;
+  }
 
   const rows = [
     { icon: User, label: "Nom", value: profile?.full_name || "—" },
@@ -28,6 +38,7 @@ export default async function ProfilePage() {
   return (
     <div className="min-h-screen pb-24">
       <AppHeader title="Mon profil" />
+      <DemoBanner />
 
       <div className="space-y-4 p-4">
         <div className="flex flex-col items-center py-4">

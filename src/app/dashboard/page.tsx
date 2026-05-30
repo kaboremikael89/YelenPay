@@ -3,25 +3,32 @@ import { Plus, Users, TrendingUp, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
+import { DemoBanner } from "@/components/DemoBanner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCFA, FREQUENCY_LABELS } from "@/lib/utils";
+import { DEMO, demoTontines, demoUser } from "@/lib/demo";
 import type { Tontine } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { email?: string } | null = demoUser;
+  let tontines: Tontine[] = demoTontines;
 
-  const { data } = await supabase
-    .from("tontines")
-    .select("*")
-    .order("created_at", { ascending: false });
-  const tontines = (data ?? []) as Tontine[];
+  if (!DEMO) {
+    const supabase = await createClient();
+    const {
+      data: { user: u },
+    } = await supabase.auth.getUser();
+    user = u;
+    const { data } = await supabase
+      .from("tontines")
+      .select("*")
+      .order("created_at", { ascending: false });
+    tontines = (data ?? []) as Tontine[];
+  }
 
   const activeCount = tontines.filter((t) => t.status === "active").length;
   const totalEngaged = tontines.reduce(
@@ -32,6 +39,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen pb-24">
       <AppHeader title="Tableau de bord" />
+      <DemoBanner />
 
       <div className="space-y-6 p-4">
         <div className="grid grid-cols-2 gap-3">

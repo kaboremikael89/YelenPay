@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createInvoice } from "@/lib/paydunya";
+import { DEMO } from "@/lib/demo";
 import type { TontineMember } from "@/lib/types";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -37,6 +38,7 @@ async function seedRoundContributions(
 }
 
 export async function createTontine(_prev: unknown, formData: FormData) {
+  if (DEMO) redirect("/tontines/t1");
   const supabase = await createClient();
   const {
     data: { user },
@@ -113,6 +115,10 @@ export async function createTontine(_prev: unknown, formData: FormData) {
 /** Lance un paiement PayDunya pour une cotisation et redirige vers la page de paiement. */
 export async function payContribution(formData: FormData) {
   const contributionId = String(formData.get("contribution_id") ?? "");
+  if (DEMO) {
+    const tontineId = String(formData.get("tontine_id") ?? "t1");
+    redirect(`/tontines/${tontineId}?paid=1`);
+  }
   const supabase = await createClient();
   const {
     data: { user },
@@ -151,6 +157,7 @@ export async function payContribution(formData: FormData) {
 /** Passe la tontine au tour suivant (réservé au créateur). */
 export async function advanceRound(formData: FormData) {
   const tontineId = String(formData.get("tontine_id") ?? "");
+  if (DEMO) redirect(`/tontines/${tontineId}?demo=1`);
   const supabase = await createClient();
   const {
     data: { user },
