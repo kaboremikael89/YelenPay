@@ -6,14 +6,18 @@ import { BottomNav } from "@/components/BottomNav";
 import { DemoBanner } from "@/components/DemoBanner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DEMO, demoUser, demoProfile } from "@/lib/demo";
+import { DEMO, demoUser, demoProfile, demoTontines } from "@/lib/demo";
+import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  let user: { email?: string } | null = demoUser;
+  let user: { id?: string; email?: string } | null = demoUser;
   let profile: Profile | null = demoProfile;
+  let managedCount = demoTontines.filter(
+    (t) => t.created_by === demoUser.id,
+  ).length;
 
   if (!DEMO) {
     const supabase = await createClient();
@@ -27,7 +31,14 @@ export default async function ProfilePage() {
       .eq("id", u?.id ?? "")
       .single();
     profile = data as Profile | null;
+    const { count } = await supabase
+      .from("tontines")
+      .select("id", { count: "exact", head: true })
+      .eq("created_by", u?.id ?? "");
+    managedCount = count ?? 0;
   }
+
+  const isResponsable = managedCount > 0;
 
   const rows = [
     { icon: User, label: "Nom", value: profile?.full_name || "—" },
@@ -46,6 +57,15 @@ export default async function ProfilePage() {
             {(profile?.full_name || user?.email || "?").charAt(0).toUpperCase()}
           </div>
           <p className="mt-3 font-semibold">{profile?.full_name || "Membre"}</p>
+          {isResponsable ? (
+            <Badge tone="gold" className="mt-1">
+              Responsable · {managedCount} tontine{managedCount > 1 ? "s" : ""}
+            </Badge>
+          ) : (
+            <Badge tone="gray" className="mt-1">
+              Membre
+            </Badge>
+          )}
         </div>
 
         <Card>

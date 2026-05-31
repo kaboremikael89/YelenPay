@@ -154,6 +154,95 @@ export async function payContribution(formData: FormData) {
   redirect(invoice.invoiceUrl);
 }
 
+/** Ajoute un membre à la tontine (réservé au responsable). */
+export async function addMember(formData: FormData) {
+  const tontineId = String(formData.get("tontine_id") ?? "");
+  if (DEMO) redirect(`/tontines/${tontineId}?demo=1`);
+
+  const name = String(formData.get("name") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim() || null;
+  if (!name) redirect(`/tontines/${tontineId}`);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: tontine } = await supabase
+    .from("tontines")
+    .select("*")
+    .eq("id", tontineId)
+    .single();
+  if (!tontine || tontine.created_by !== user.id) redirect("/dashboard");
+
+  const { data: members } = await supabase
+    .from("tontine_members")
+    .select("position")
+    .eq("tontine_id", tontineId)
+    .order("position", { ascending: false })
+    .limit(1);
+  const nextPosition = (members?.[0]?.position ?? 0) + 1;
+
+  await supabase.from("tontine_members").insert({
+    tontine_id: tontineId,
+    name,
+    phone,
+    position: nextPosition,
+  });
+  await supabase
+    .from("tontines")
+    .update({ max_members: nextPosition })
+    .eq("id", tontineId);
+
+  revalidatePath(`/tontines/${tontineId}`);
+}
+
+/** Retire un membre et réorganise les positions (réservé au responsable). */
+export async function removeMember(formData: FormData) {
+  const tontineId = String(formData.get("tontine_id") ?? "");
+  const memberId = String(formData.get("member_id") ?? "");
+  if (DEMO) redirect(`/tontines/${tontineId}?demo=1`);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: tontine } = await supabase
+    .from("tontines")
+    .select("*")
+    .eq("id", tontineId)
+    .single();
+  if (!tontine || tontine.created_by !== user.id) redirect("/dashboard");
+
+  await supabase.from("tontine_members").delete().eq("id", memberId);
+
+  // Re-compacte les positions pour rester contigu (1..N).
+  const { data: remaining } = await supabase
+    .from("tontine_members")
+    .select("id, position")
+    .eq("tontine_id", tontineId)
+    .order("position");
+  let i = 1;
+  for (const m of remaining ?? []) {
+    if (m.position !== i) {
+      await supabase
+        .from("tontine_members")
+        .update({ position: i })
+        .eq("id", m.id);
+    }
+    i++;
+  }
+  await supabase
+    .from("tontines")
+    .update({ max_members: Math.max((remaining?.length ?? 1), 1) })
+    .eq("id", tontineId);
+
+  revalidatePath(`/tontines/${tontineId}`);
+}
+
 /** Passe la tontine au tour suivant (réservé au créateur). */
 export async function advanceRound(formData: FormData) {
   const tontineId = String(formData.get("tontine_id") ?? "");

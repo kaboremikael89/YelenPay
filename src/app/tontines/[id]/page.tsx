@@ -1,14 +1,31 @@
 import { notFound } from "next/navigation";
-import { Crown, Check, Clock, Trophy } from "lucide-react";
+import {
+  Crown,
+  Check,
+  Clock,
+  Trophy,
+  ShieldCheck,
+  UserPlus,
+  Trash2,
+  MessageCircle,
+  Send,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatCFA, FREQUENCY_LABELS } from "@/lib/utils";
 import { buildRoundState, beneficiaryForRound, potAmount } from "@/lib/tontine";
-import { payContribution, advanceRound } from "@/app/tontines/actions";
+import {
+  payContribution,
+  advanceRound,
+  addMember,
+  removeMember,
+} from "@/app/tontines/actions";
+import { waReminderLink, waInviteLink } from "@/lib/whatsapp";
 import {
   DEMO,
   demoUser,
@@ -168,24 +185,127 @@ export default async function TontineDetailPage({
                       <Crown className="h-3.5 w-3.5 text-accent" />
                     )}
                   </div>
-                  {s.isBeneficiary ? (
-                    <Badge tone="gold">Bénéficiaire</Badge>
-                  ) : s.isPaid ? (
-                    <Badge tone="green">
-                      <Check className="mr-1 h-3 w-3" /> Payé
-                    </Badge>
-                  ) : (
-                    <Badge tone="gray">
-                      <Clock className="mr-1 h-3 w-3" /> En attente
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {s.isBeneficiary ? (
+                      <Badge tone="gold">Bénéficiaire</Badge>
+                    ) : s.isPaid ? (
+                      <Badge tone="green">
+                        <Check className="mr-1 h-3 w-3" /> Payé
+                      </Badge>
+                    ) : (
+                      <Badge tone="gray">
+                        <Clock className="mr-1 h-3 w-3" /> En attente
+                      </Badge>
+                    )}
+                    {/* Relance WhatsApp (responsable, membre non payé) */}
+                    {isOwner && !s.isBeneficiary && !s.isPaid && (
+                      <a
+                        href={
+                          waReminderLink(
+                            s.member.name,
+                            s.member.phone,
+                            t,
+                            t.current_round,
+                          ) ?? "#"
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Relancer ${s.member.name} sur WhatsApp`}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/15 text-[#1da851] transition-colors hover:bg-[#25D366]/25"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))}
             </CardContent>
           </Card>
         </div>
 
-        {/* Gestion (créateur) */}
+        {/* Espace responsable */}
+        {isOwner && (
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <h2 className="font-semibold">Espace responsable</h2>
+            </div>
+            <Card>
+              <CardContent className="space-y-4 p-4">
+                {/* Liste des membres + invitation / suppression */}
+                <div className="divide-y divide-border">
+                  {members.map((m) => (
+                    <div
+                      key={m.id}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/5 text-xs font-semibold">
+                          {m.position}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium">{m.name}</p>
+                          {m.phone && (
+                            <p className="text-xs text-muted">{m.phone}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={waInviteLink(m.name, m.phone, t) ?? "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Inviter ${m.name} sur WhatsApp`}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/15 text-[#1da851] hover:bg-[#25D366]/25"
+                        >
+                          <Send className="h-4 w-4" />
+                        </a>
+                        {m.user_id !== user?.id && (
+                          <form action={removeMember}>
+                            <input
+                              type="hidden"
+                              name="tontine_id"
+                              value={t.id}
+                            />
+                            <input
+                              type="hidden"
+                              name="member_id"
+                              value={m.id}
+                            />
+                            <button
+                              type="submit"
+                              aria-label={`Retirer ${m.name}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-full bg-danger/10 text-danger hover:bg-danger/20"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Ajout d'un membre */}
+                <form action={addMember} className="space-y-2 border-t border-border pt-3">
+                  <p className="text-sm font-semibold">Ajouter un membre</p>
+                  <input type="hidden" name="tontine_id" value={t.id} />
+                  <Input name="name" placeholder="Nom du membre" required />
+                  <Input
+                    name="phone"
+                    type="tel"
+                    placeholder="Téléphone (+221 7X…)"
+                  />
+                  <Button type="submit" variant="dark" size="sm" className="w-full">
+                    <UserPlus className="h-4 w-4" /> Ajouter
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Gestion du tour (responsable) */}
         {isOwner && t.status === "active" && (
           <form action={advanceRound}>
             <input type="hidden" name="tontine_id" value={t.id} />

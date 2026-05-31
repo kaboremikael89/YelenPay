@@ -50,31 +50,34 @@ export const demoTontines: Tontine[] = [
 
 const membersByTontine: Record<string, TontineMember[]> = {
   t1: [
-    "Awa Demo",
-    "Moussa Fall",
-    "Fatou Ndiaye",
-    "Cheikh Sow",
-    "Mariama Ba",
-  ].map((name, i) => ({
+    ["Awa Demo", "+221 77 123 45 67"],
+    ["Moussa Fall", "+221 78 234 56 78"],
+    ["Fatou Ndiaye", "+221 76 345 67 89"],
+    ["Cheikh Sow", "+221 70 456 78 90"],
+    ["Mariama Ba", "+221 77 567 89 01"],
+  ].map(([name, phone], i) => ({
     id: `t1-m${i + 1}`,
     tontine_id: "t1",
     user_id: i === 0 ? "demo-user" : null,
     name,
-    phone: null,
+    phone,
     position: i + 1,
     created_at: new Date().toISOString(),
   })),
-  t2: ["Awa Demo", "Ibrahima Diallo", "Aminata Sy", "Oumar Gueye"].map(
-    (name, i) => ({
-      id: `t2-m${i + 1}`,
-      tontine_id: "t2",
-      user_id: i === 0 ? "demo-user" : null,
-      name,
-      phone: null,
-      position: i + 1,
-      created_at: new Date().toISOString(),
-    }),
-  ),
+  t2: [
+    ["Awa Demo", "+221 77 123 45 67"],
+    ["Ibrahima Diallo", "+221 78 111 22 33"],
+    ["Aminata Sy", "+221 76 222 33 44"],
+    ["Oumar Gueye", "+221 70 333 44 55"],
+  ].map(([name, phone], i) => ({
+    id: `t2-m${i + 1}`,
+    tontine_id: "t2",
+    user_id: i === 0 ? "demo-user" : null,
+    name,
+    phone,
+    position: i + 1,
+    created_at: new Date().toISOString(),
+  })),
 };
 
 // Pour t1, tour 2 : bénéficiaire = position 2 (Moussa). Les autres cotisent.

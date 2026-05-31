@@ -19,11 +19,15 @@ une nouvelle base technique adaptée à la commercialisation.
 
 - Inscription / connexion (Supabase Auth)
 - Création de tontines (montant, fréquence, membres, ordre de rotation)
-- Tableau de bord des tontines
+- Tableau de bord des tontines + page Rapports
 - Suivi par tour : cagnotte, bénéficiaire, état des cotisations
+- **Espace responsable** : le créateur d'une tontine peut **ajouter / retirer
+  des membres** et gérer la rotation
+- **Relances & invitations WhatsApp** via liens `wa.me` (message pré-rempli) —
+  voir l'étude [`docs/whatsapp-integration.md`](docs/whatsapp-integration.md)
 - Paiement d'une cotisation via PayDunya (Wave / Orange Money / Free Money)
 - Confirmation automatique des paiements via webhook (IPN) PayDunya
-- Passage au tour suivant / clôture (réservé au créateur)
+- Passage au tour suivant / clôture (réservé au responsable)
 
 ## Démarrage
 
