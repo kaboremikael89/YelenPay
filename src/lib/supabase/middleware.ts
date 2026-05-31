@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
   const isProtected =
     path.startsWith("/dashboard") ||
     path.startsWith("/tontines") ||
+    path.startsWith("/reports") ||
     path.startsWith("/profile");
 
   if (!user && isProtected) {

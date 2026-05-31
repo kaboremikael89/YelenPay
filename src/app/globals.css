@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
-/* ── Palette YelenPay (inspirée du drapeau sénégalais : vert / or / rouge) ── */
+/* ── Palette YelenPay — style fintech chaleureux (orange / espresso) ── */
 :root {
-  --background: #f7f8f7;
-  --foreground: #14241a;
-  --primary: #1e7a46; /* vert Sénégal */
-  --primary-dark: #155c34;
+  --background: #f4efe8; /* off-white chaud */
+  --foreground: #2b211c; /* espresso */
+  --primary: #ed6f1c; /* orange */
+  --primary-dark: #d35e12;
   --primary-foreground: #ffffff;
-  --accent: #f5b700; /* or */
-  --accent-foreground: #14241a;
-  --danger: #d12b2b; /* rouge */
+  --accent: #f9a44b; /* orange clair */
+  --accent-foreground: #2b211c;
+  --dark: #2e2420; /* cartes sombres espresso */
+  --dark-foreground: #f4efe8;
+  --danger: #d12b2b;
   --card: #ffffff;
-  --muted: #6b7770;
-  --border: #e2e7e3;
+  --muted: #8a7d75;
+  --border: #ece5dc;
 }
 
 @theme inline {
@@ -23,15 +25,31 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-dark: var(--dark);
+  --color-dark-foreground: var(--dark-foreground);
   --color-danger: var(--danger);
   --color-card: var(--card);
   --color-muted: var(--muted);
   --color-border: var(--border);
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-sans: var(--font-sans), system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* Dégradé orange chaud réutilisable (cartes hero, boutons) */
+.bg-orange-grad {
+  background:
+    radial-gradient(120% 120% at 80% 20%, #ffd9a8 0%, transparent 45%),
+    linear-gradient(135deg, #f9a44b 0%, #ed6f1c 55%, #e0590f 100%);
+}
+
+/* Léger effet de brillance pour les cartes-cartes bancaires */
+.card-sheen {
+  background:
+    radial-gradient(90% 90% at 85% 15%, rgba(255, 255, 255, 0.45) 0%, transparent 40%),
+    linear-gradient(135deg, #f9a44b 0%, #ed6f1c 60%, #d8550c 100%);
 }

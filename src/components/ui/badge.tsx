@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 type Tone = "green" | "gold" | "gray" | "red";
 
 const tones: Record<Tone, string> = {
-  green: "bg-primary/10 text-primary",
-  gold: "bg-accent/20 text-[#8a6d00]",
+  green: "bg-[#1e7a46]/10 text-[#1e7a46]",
+  gold: "bg-accent/25 text-[#9a5a00]",
   gray: "bg-black/5 text-muted",
   red: "bg-danger/10 text-danger",
 };

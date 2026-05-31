@@ -99,8 +99,8 @@ export default async function TontineDetailPage({
         )}
 
         {/* Cagnotte du tour */}
-        <Card className="border-0 bg-gradient-to-br from-primary to-primary-dark text-primary-foreground">
-          <CardContent className="p-5">
+        <Card className="card-sheen border-0 text-white shadow-xl shadow-primary/25">
+          <CardContent className="p-6">
             <p className="text-sm text-white/80">
               Cagnotte du tour {t.current_round}/{members.length}
             </p>
